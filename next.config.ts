@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
   },
   
   // Output standalone for Docker
-  output: 'standalone',
+  // Note: Disabled for Railway - let Railway handle the build
+  // output: 'standalone',
   
   // Security headers
   async headers() {
