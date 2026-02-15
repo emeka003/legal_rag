@@ -1,10 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+let supabaseInstance: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
+export function getSupabaseClient(): SupabaseClient {
+  if (!supabaseInstance) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
+    }
+
+    supabaseInstance = createClient(supabaseUrl, supabaseServiceKey);
+  }
+
+  return supabaseInstance;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// For backward compatibility - lazy initialization
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(target, prop) {
+    const client = getSupabaseClient();
+    return client[prop as keyof SupabaseClient];
+  },
+});

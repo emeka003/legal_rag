@@ -1,11 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is required');
+function getGeminiClient() {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error('GEMINI_API_KEY environment variable is required');
+    }
+    return new GoogleGenerativeAI(apiKey);
 }
-
-const genAI = new GoogleGenerativeAI(apiKey);
 
 async function withRetry<T>(
     fn: () => Promise<T>,
@@ -23,7 +24,7 @@ async function withRetry<T>(
 
 export async function embedText(text: string): Promise<number[]> {
     return withRetry(async () => {
-        const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+        const model = getGeminiClient().getGenerativeModel({ model: 'text-embedding-004' });
         const result = await model.embedContent(text);
         return result.embedding.values;
     });
@@ -35,7 +36,7 @@ export async function chatWithContext(
     history: { role: string; content: string }[],
     systemPrompt?: string
 ): Promise<string> {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = getGeminiClient().getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     const defaultSystemPrompt = `You are an expert legal AI assistant. You answer questions about legal documents using ONLY the provided context. 
 
@@ -82,7 +83,7 @@ export async function generateWithPrompt(
     userInput: string,
     context: string
 ): Promise<string> {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = getGeminiClient().getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     const chat = model.startChat({
         history: [

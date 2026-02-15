@@ -1,16 +1,20 @@
 import { NextRequest } from 'next/server';
 
-const AUTH_SECRET = process.env.AUTH_SECRET;
-if (!AUTH_SECRET) {
-    throw new Error('AUTH_SECRET environment variable is required');
-}
 const COOKIE_NAME = 'legal-rag-session';
+
+function getAuthSecret(): string {
+    const secret = process.env.AUTH_SECRET;
+    if (!secret) {
+        throw new Error('AUTH_SECRET environment variable is required');
+    }
+    return secret;
+}
 
 async function getKey() {
     const enc = new TextEncoder();
     return crypto.subtle.importKey(
         'raw',
-        enc.encode(AUTH_SECRET),
+        enc.encode(getAuthSecret()),
         { name: 'HMAC', hash: 'SHA-256' },
         false,
         ['sign', 'verify']
